@@ -291,9 +291,9 @@ rec {
       optBool = optsIsString || ((builtins.isBool opts) && opts);
       optPath =
         optionalString optBool (if optsIsString then opts else "valiant");
-      optDirs = builtins.filter builtins.pathExists (map
-        (dir: if (hasPrefix "/" dir) then dir else (src + "/${dir}"))
-        ((getOpts src optPath).dirs or [ ]));
+      optDirs = builtins.filter builtins.pathExists
+        (map (dir: if (hasPrefix "/" dir) then dir else (src + "/${dir}"))
+          ((getOpts src optPath).dirs or [ ]));
       optFlakes = builtins.listToAttrs (map (dir: {
         name = baseNameOf dir;
         value = if (builtins.pathExists (dir + "/flake.nix")) then
