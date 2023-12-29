@@ -250,21 +250,8 @@ rec {
     // (removeAttrs b a-names);
   recursiveUpdateAll = recursiveUpdateAll' null;
 
-  getOpts = root: opts:
-    let
-      mkPath = format: root + "/${opts}.${format}";
-      fromPath = format:
-        let path = mkPath (toLower format);
-        in optionalAttrs (builtins.pathExists path)
-        (builtins."from${toUpper format}" (builtins.readFile path));
-    in builtins.foldl' recursiveUpdateAll (fromPath "json") [
-      (let path = mkPath "nix";
-      in optionalAttrs (builtins.pathExists path) (import path))
-      (fromPath "toml")
-    ];
-
-  mkInputs = args@{ src, inputs ? { }, opts ? true, niv ? true, npins ? true
-    , overrides ? { }, ... }:
+  mkInputs =
+    args@{ src, inputs ? { }, niv ? true, npins ? true, overrides ? { }, ... }:
     let
       mkFlakes = default: manager:
         let
@@ -291,27 +278,8 @@ rec {
             })
           else
             (processInputs v)) (import rootPath));
-      optsIsString = builtins.isString opts;
-      optBool = optsIsString || ((builtins.isBool opts) && opts);
-      optPath =
-        optionalString optBool (if optsIsString then opts else "valiant");
-      optDirs = builtins.filter builtins.pathExists
-        (map (dir: if (hasPrefix "/" dir) then dir else (src + "/${dir}"))
-          ((getOpts src optPath).dirs or [ ]));
-      optFlakes = builtins.listToAttrs (map (dir: {
-        name = baseNameOf dir;
-        value = if (builtins.pathExists (dir + "/flake.nix")) then
-          (mkFlake { src = dir; })
-        else
-          (fetchGit dir);
-      }) (if (allUnique (map baseNameOf
-        (builtins.filter (dir: !(builtins.isAttrs dir)) optDirs))) then
-        optDirs
-      else
-        (builtins.trace optDirs
-          (abort "all directories must have unique names"))));
-    in builtins.foldl' (a: b: a // b) inputs ((mapAttrsToList mkFlakes {
+    in builtins.foldl' (a: b: a // b) inputs (mapAttrsToList mkFlakes {
       "nix/sources.nix" = niv;
       npins = npins;
-    }) ++ [ (mapAttrNames (n: v: overrides.${n} or n) optFlakes) ]);
+    });
 }
