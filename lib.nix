@@ -1,6 +1,7 @@
 rec {
   inherit (builtins) trace;
   traceVal = value: trace value value;
+  traceValSeq = value: trace (builtins.deepSeq value value) value;
 
   optionalAttrs = cond: attrs: if cond then attrs else { };
   optionalString = cond: string: if cond then string else "";
@@ -275,7 +276,10 @@ rec {
         in optionalAttrs (bool && (builtins.pathExists rootPath))
         (builtins.mapAttrs (name: v:
           let
-            outPath = builtins.unsafeDiscardStringContext v.outPath;
+            outPath = if (hasPrefix "/" v.outPath) then
+              (builtins.unsafeDiscardStringContext v.outPath)
+            else
+              (src + "/${v.outPath}");
             flakePath = outPath + "/flake.nix";
           in if (builtins.pathExists flakePath) then
             (mkFlake {

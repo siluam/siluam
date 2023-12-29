@@ -1,12 +1,12 @@
 src:
 with import ./lib.nix;
 let
-  flake = mkFlake { inherit src; };
-  nixpkgs = flake.inputs.nixpkgs or (mkFlake {
+  self = mkFlake { src = ./.; };
+  flake = mkFlake {
     inherit src;
-    owner = "nixos";
-    repo = "nixpkgs";
-  });
+    inherit (self) flake-compat;
+  };
+  nixpkgs = flake.inputs.nixpkgs or self.inputs.nixpkgs;
   inherit (nixpkgs) lib;
   flakeAttrs = lib.filterAttrs (n: isAttrsOnly) flake;
   swap = system: builtins.mapAttrs (n: builtins.getAttr system) flakeAttrs;
