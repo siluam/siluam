@@ -13,6 +13,27 @@ rec {
   toLower = builtins.replaceStrings upperChars lowerChars;
   toUpper = builtins.replaceStrings lowerChars upperChars;
 
+  # Taken From: https://github.com/NixOS/nixpkgs/blob/master/lib/attrsets.nix#L747C1-L762C56
+  /* Generate an attribute set by mapping a function over a list of
+     attribute names.
+
+     Example:
+       genAttrs [ "foo" "bar" ] (name: "x_" + name)
+       => { foo = "x_foo"; bar = "x_bar"; }
+
+     Type:
+       genAttrs :: [ String ] -> (String -> Any) -> AttrSet
+  */
+  genAttrs =
+    # Names of values in the resulting attribute set.
+    names:
+    # A function, given the name of the attribute, returns the attribute's value.
+    f:
+    builtins.listToAttrs (map (name: {
+      inherit name;
+      value = f name;
+    }) names);
+
   # Taken From: https://github.com/NixOS/nixpkgs/blob/master/lib/lists.nix#L856C1-L864C73
   /* Remove duplicate elements from the list. O(n^2) complexity.
 

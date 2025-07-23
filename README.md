@@ -21,5 +21,5 @@ let
         inherit url;
         ${if (locked ? narHash) then "sha256" else null} = locked.narHash;
       }));
-in { __functor = self: ssrc: siluam ssrc ./.; } // (siluam ./. ./.)
+in (siluam ./. ./.) // { __functor = self: ssrc: siluam ssrc ./.; }
 ```

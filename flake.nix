@@ -1,8 +1,12 @@
 {
   inputs.flake-compat.url = "github:edolstra/flake-compat";
   inputs.flake-compat.flake = false;
-  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
   outputs = { ... }:
-    let siluam = { lib = import ./lib.nix; };
+    let
+      siluam = {
+        lib = import ./lib.nix;
+        # TODO: Add the legacyPackages and pkgs here
+      };
     in { __functor = self: import ./.; } // siluam;
 }
